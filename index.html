@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スライム進化RPG</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #slime-display {
+            font-size: 100px;
+            margin: 20px 0;
+            transition: transform 0.5s ease-in-out;
+        }
+        #status-area {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+        }
+        .action-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .action-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>スライム進化RPG</h1>
+        <div id="slime-display">💧</div> <!-- 初期スライムの絵文字 -->
+        
+        <div id="status-area">
+            <p>名前: <strong id="slime-name">スライム</strong></p>
+            <p>レベル: <strong id="slime-level">1</strong></p>
+            <p>経験値: <strong id="slime-exp">0</strong> / <strong id="slime-next-exp">10</strong></p>
+            <p>形態: <strong id="slime-stage">1</strong></p>
+        </div>
+
+        <button class="action-button" onclick="gainExp(5)">敵を倒す (経験値+5)</button>
+        <p id="message-area" style="color: blue; margin-top: 10px;"></p>
+    </div>
+
+    <script>
+        // ゲームの状態を定義
+        let gameState = {
+            name: "スライム",
+            level: 1,
+            exp: 0,
+            nextExp: 10,
+            stage: 1,
+            emoji: "💧"
+        };
+
+        // 進化の定義
+        const evolutions = {
+            1: { name: "スライム", emoji: "💧", nextLevel: 10 },
+            2: { name: "キングスライム", emoji: "👑💧", nextLevel: 30 },
+            3: { name: "メタルスライム", emoji: "🔩💧", nextLevel: 100 },
+            4: { name: "スライムジェネラル", emoji: "⚔️💧", nextLevel: Infinity }
+        };
+
+        // DOM要素への参照
+        const slimeDisplay = document.getElementById('slime-display');
+        const slimeNameElement = document.getElementById('slime-name');
+        const slimeLevelElement = document.getElementById('slime-level');
+        const slimeExpElement = document.getElementById('slime-exp');
+        const slimeNextExpElement = document.getElementById('slime-next-exp');
+        const slimeStageElement = document.getElementById('slime-stage');
+        const messageArea = document.getElementById('message-area');
+
+        // ステータス表示を更新する関数
+        function updateStatus() {
+            slimeNameElement.textContent = gameState.name;
+            slimeLevelElement.textContent = gameState.level;
+            slimeExpElement.textContent = gameState.exp;
+            slimeNextExpElement.textContent = gameState.nextExp;
+            slimeStageElement.textContent = gameState.stage;
+            slimeDisplay.textContent = gameState.emoji;
+        }
+
+        // レベルアップを処理する関数
+        function levelUp() {
+            gameState.level++;
+            gameState.exp = 0;
+            // 次の進化レベルに基づいて次の経験値目標を設定
+            const nextStageData = evolutions[gameState.stage + 1];
+            if (nextStageData) {
+                gameState.nextExp = nextStageData.nextLevel;
+            } else {
+                gameState.nextExp = Infinity; // 最終進化なら経験値上限なし
+            }
+            showMessage("レベルアップしました！現在のレベル: " + gameState.level);
+            checkEvolution();
+            updateStatus();
+        }
+
+        // 進化をチェック・処理する関数
+        function checkEvolution() {
+            const currentStageData = evolutions[gameState.stage];
+            if (gameState.level >= currentStageData.nextLevel && evolutions[gameState.stage + 1]) {
+                gameState.stage++;
+                const nextStageData = evolutions[gameState.stage];
+                gameState.name = nextStageData.name;
+                gameState.emoji = nextStageData.emoji;
+                // 進化アニメーション
+                slimeDisplay.style.transform = 'scale(2)';
+                setTimeout(() => {
+                    slimeDisplay.style.transform = 'scale(1)';
+                    showMessage("おめでとう！ " + gameState.name + "に進化しました！");
+                }, 500);
+            }
+        }
+
+        // 経験値獲得を処理する関数
+        function gainExp(amount) {
+            gameState.exp += amount;
+            while (gameState.exp >= gameState.nextExp) {
+                // 経験値が次のレベルまでの必要経験値を超えたらレベルアップ
+                const remainingExp = gameState.exp - gameState.nextExp;
+                levelUp();
+                gameState.exp = remainingExp; // 残り経験値を次のレベルへ持ち越し
+            }
+            showMessage(amount + "の経験値を獲得しました！");
+            updateStatus();
+        }
+
+        // メッセージ表示関数
+        function showMessage(msg) {
+            messageArea.textContent = msg;
+            // 2秒後にメッセージをクリア
+            setTimeout(() => {
+                messageArea.textContent = "";
+            }, 2000);
+        }
+
+        // ゲーム開始時の初期表示
+        updateStatus();
+    </script>
+</body>
+</html>
